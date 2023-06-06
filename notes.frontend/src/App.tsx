@@ -10,11 +10,6 @@ const App: React.FC = () => {
   const [todo, setTodo] = useState<string>("");
   const [details, setDetails] = useState<string>("");
 
-  // useEffect(() => {
-  //   axios.get(urlGetAll).then((response: AxiosResponse<any>) => {
-  //     console.log(response.data);
-  //   });
-  // }, [setDetails, setTodo]);
   return (
     <div className="App">
       <span className="heading">TODO</span>

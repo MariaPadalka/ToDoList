@@ -74,6 +74,13 @@
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+  background-color: rgb(121, 21, 21);
+}
+.noteOverview .NoteButton{
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  background-color: #fa1c4e4a;
 }
 
 .noteWindow{
@@ -97,3 +104,6 @@
     width: 100%;
     border-radius: 10px;
 }
+/* .dragging {
+  opacity: 0.5;
+} */

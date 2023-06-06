@@ -1,42 +1,15 @@
-// import React, { useState } from 'react';
-// import axios from 'axios';
-// import Note from '../NotesBoard/NotesBoard'
+import React, { useEffect } from "react";
+import { Modal, Form, Input, Button, Typography } from "antd";
+import moment from "moment";
 
-
-// interface NoteWindowProps {
-//   title: string;
-//   details: string;
-//   creationDate: string;
-//   onClose: () => void;
-// }
-
-// const NoteWindow: React.FC<NoteWindowProps> = ({
-//   title,
-//   details,
-//   creationDate,
-//   onClose,
-// }) => {
-//   return (
-//     <div className="noteWindow">
-//       <h2>{title}</h2>
-//       <p>{details}</p>
-//       <p>Creation Date: {creationDate}</p>
-//       <button onClick={onClose}>Close</button>
-//     </div>
-//   );
-// };
-
-// export default NoteWindow;
-
-import React, { useState } from "react";
-import { Modal, Form, Input, Button } from "antd";
-import {Note} from "../NotesBoard/NotesBoard"
+const { TextArea } = Input;
+const { Text } = Typography;
 
 interface EditModalProps {
   visible: boolean;
   onCancel: () => void;
-  onSave: (values: Note) => void;
-  initialValues: Note | undefined;
+  onSave: (values: any) => void;
+  initialValues: any;
 }
 
 const EditModal: React.FC<EditModalProps> = ({
@@ -47,11 +20,22 @@ const EditModal: React.FC<EditModalProps> = ({
 }) => {
   const [form] = Form.useForm();
 
+  // Update initialValues prop when selectedNote changes
+  useEffect(() => {
+    form.setFieldsValue(initialValues);
+  }, [initialValues, form]);
+
   const handleSave = () => {
     form
       .validateFields()
       .then((values) => {
-        onSave(values);
+        const updatedNote = {
+          id: initialValues.id,
+          title: values.title,
+          details: values.details,
+          status: initialValues.status,
+        };
+        onSave(updatedNote);
         form.resetFields();
       })
       .catch((error) => {
@@ -61,38 +45,43 @@ const EditModal: React.FC<EditModalProps> = ({
 
   return (
     <Modal
+      okButtonProps={{ style: { backgroundColor: "#b83312" } }}
       visible={visible}
-      title={initialValues?.title}
+      title="Edit Note"
       onCancel={onCancel}
       footer={[
         <Button key="cancel" onClick={onCancel}>
           Cancel
         </Button>,
-        <Button key="save" type="primary" onClick={handleSave}>
+        <Button
+          key="save"
+          type="primary"
+          onClick={handleSave}
+          style={{ backgroundColor: "#414e96", borderColor: "#112599" }}
+        >
           Save
         </Button>,
       ]}
     >
       <Form form={form} layout="vertical" initialValues={initialValues}>
         <Form.Item
-          name="Title"
-          label="Propert"
-          rules={[{ required: true }]}
+          name="title"
+          label="Title"
+          rules={[{ required: true, message: "Please enter a title" }]}
         >
           <Input />
         </Form.Item>
-        <Form.Item
-          name="property2"
-          label="Property 2"
-          rules={[{ required: true }]}
-        >
-          <Input />
+        <Form.Item name="details" label="Details">
+          <TextArea rows={4} />
         </Form.Item>
-        {/* Add more form items for other properties */}
+        {initialValues?.editDate && (
+          <Text style={{ textAlign: "right", color: "gray" }}>
+          Edit Date: {moment(initialValues.editDate).format("MMM DD, YYYY h:mm A")}
+        </Text>
+        )}
       </Form>
     </Modal>
   );
 };
 
 export default EditModal;
-

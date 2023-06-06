@@ -31,7 +31,6 @@ const InputField: React.FC<Props> = ({
       .then((response) => {
         // Handle the response
         window.location.reload()
-        console.log(response.data);
       })
       .catch((error) => {
         // Handle any errors
