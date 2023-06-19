@@ -50,30 +50,6 @@ namespace Notes.WebApi
                 });
             });
             services.AddMediatR(typeof(Startup));
-            /*
-            services.AddAuthentication(config =>
-            {
-                config.DefaultAuthenticateScheme =
-                    JwtBearerDefaults.AuthenticationScheme;
-                config.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-                .AddJwtBearer("Bearer", options =>
-                {
-                    options.Authority = "https://localhost:44386/";
-                    options.Audience = "NotesWebAPI";
-                    options.RequireHttpsMetadata = false;
-                });
-
-            services.AddVersionedApiExplorer(options =>
-                options.GroupNameFormat = "'v'VVV");
-            services.AddTransient<IConfigureOptions<SwaggerGenOptions>,
-                    ConfigureSwaggerOptions>();
-            services.AddSwaggerGen();
-            services.AddApiVersioning();
-
-            services.AddSingleton<ICurrentUserService, CurrentUserService>();
-            services.AddHttpContextAccessor();
-            */
 
 
             services.AddHttpContextAccessor();
@@ -97,7 +73,6 @@ namespace Notes.WebApi
 
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-                //IApiVersionDescriptionProvider provider)
             {
                 if (env.IsDevelopment())
                 {
@@ -111,8 +86,6 @@ namespace Notes.WebApi
                     config.RoutePrefix = string.Empty;
                 
                 });
-
-
 
                 app.UseCustomExceptionHandler();
                 app.UseRouting();

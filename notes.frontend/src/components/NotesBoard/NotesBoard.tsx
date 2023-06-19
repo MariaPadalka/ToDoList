@@ -5,9 +5,13 @@ import { urlDelete, urlGetAll, urlGet,urlUpdate } from "../../endpoints";
 import NoteWindow from "../NoteWindow/NoteWindow";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import { Button, Tooltip } from "antd";
-import ConfirmModal from "../ConfirmModal";
+import ConfirmModal from "../Modals/ConfirmModal";
 import EditModal from "../NoteWindow/NoteWindow";
+import { message } from 'antd';
 
+export interface NotesBoardProps {
+  details: string;
+}
 
 export interface Note {
   id: string;
@@ -15,24 +19,26 @@ export interface Note {
   status: number;
   details: string;
   creationDate: string;
-  editDate: string;
+  editDate: string|null;
 }
 
 interface NotesResponse {
   notes: Note[];
 }
 
-export const NotesBoard: React.FC = () => {
+export const NotesBoard: React.FC<NotesBoardProps> = ({details}) => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [noteWindowVisible, setNoteWindowVisible] = useState(false);
   const [deleteWindowVisible, setDeleteWindowVisible] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | undefined>(undefined);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [deleteCount, setDeleteCount] = useState(0);
+  const [messageApi, contextHolder] = message.useMessage();
+
 
   useEffect(() => {
     getAllNotes();
-  }, [deleteCount]);
+  }, [deleteCount, notes, details]);
 
   const getAllNotes = () => {
     axios
@@ -51,7 +57,13 @@ export const NotesBoard: React.FC = () => {
 
   const renderNotes = (notes: Note[]): React.ReactNode => {
     return notes.map((note) => (
-      <div key={note.id} className="noteOverview" onClick={() => handleNoteClick(note)}>
+      <div
+        key={note.id}
+        className={`noteOverview ${selectedNote?.id === note.id ? "dragging" : ""}`}
+        draggable={true}
+        onDragStart={(e) => handleDragStart(e, note.id)}
+        onClick={() => handleNoteClick(note)}
+      >
         <h5>{note.title}</h5>
   
         <Tooltip title="Delete" trigger="hover">
@@ -63,13 +75,53 @@ export const NotesBoard: React.FC = () => {
               onClickDeleteNote(note.id);
             }}
           >
-            <DeleteOutlined alt="Delete" />
+            <DeleteOutlined alt="Delete"/>
           </button>
         </Tooltip>
       </div>
     ));
   };
+  
+  const handleDragStart = (event: React.DragEvent<HTMLDivElement>, noteId: string) => {
+    event.dataTransfer.setData("text/plain", noteId);
+    event.currentTarget.classList.add("dragging"); // Add a CSS class to the dragged div
+  };
 
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>, status: number) => {
+    event.preventDefault();
+    const noteId = event.dataTransfer.getData("text/plain");
+    const updatedNote = notes.find((note) => note.id === noteId);
+    if (updatedNote) {
+      axios
+        .get<Note>(`${urlGet}/${noteId}`)
+        .then((response) => {
+          const noteData = response.data;
+          noteData.status = status;
+          return axios.put(`${urlUpdate}`, noteData);
+        })
+        .then(() => {
+          // Update the local notes state
+          const updatedNotes = [...notes];
+          const noteIndex = updatedNotes.findIndex((note) => note.id === noteId);
+          if (noteIndex !== -1) {
+            if(updatedNotes[noteIndex].status != status){
+              messageApi.success('Status changed successfully');
+            }
+            updatedNotes[noteIndex].status = status;
+            setNotes(updatedNotes);
+          }
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    }
+  };
+  
+  
 
   const handleNoteClick = (note: Note) => {
     axios
@@ -99,6 +151,7 @@ export const NotesBoard: React.FC = () => {
         setDeleteCount((prevCount) => prevCount + 1); // Increment deleteCount
         setDeleteWindowVisible(false);
         setSelectedNoteId(null);
+        messageApi.success('Note deleted successfully');
       })
       .catch((error) => {
         console.error(error);
@@ -108,9 +161,10 @@ export const NotesBoard: React.FC = () => {
     axios
       .put(`${urlUpdate}`, updatedNote)
       .then(() => {
-        // Note successfully updated
-        // You can perform any necessary actions here, such as refreshing the notes list
+        setNoteWindowVisible(false);
+        setSelectedNote(undefined);
         getAllNotes();
+        messageApi.success('Note edited successfully');
       })
       .catch((error) => {
         console.error(error);
@@ -122,6 +176,7 @@ export const NotesBoard: React.FC = () => {
     setSelectedNoteId(null);
   };
 
+
   const todoNotes = filterNotesByStatus(0);
   const inProgressNotes = filterNotesByStatus(1);
   const doneNotes = filterNotesByStatus(2);
@@ -129,30 +184,23 @@ export const NotesBoard: React.FC = () => {
   return (
      <div className="NotesBoard">
       <div className="StatusesContainer">
-        <div className="StatusContainer">
+        <div className="StatusContainer"
+            onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, 0)}>
           <span className="status">TO DO</span>
           {renderNotes(todoNotes)}
         </div>
-        <div className="StatusContainer">
+        <div className="StatusContainer"
+            onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, 1)}>
           <span className="status">IN PROGRESS</span>
           {renderNotes(inProgressNotes)}
         </div>
-        <div className="StatusContainer">
+        <div className="StatusContainer"
+            onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, 2)}>
           <span className="status">DONE</span>
           {renderNotes(doneNotes)}
         </div>
       </div>
-
-      {/* {noteWindowVisible && selectedNote && (
-        <div className="Overlay">
-          <NoteWindow
-            title={selectedNote.title}
-            details={selectedNote.details}
-            creationDate={selectedNote.creationDate}
-            onClose={handleCloseNoteWindow}
-          />
-        </div>
-      )} */}
+      {contextHolder}
       <EditModal
         visible={noteWindowVisible}
         onCancel={handleCloseNoteWindow}
