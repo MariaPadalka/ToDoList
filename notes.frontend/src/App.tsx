@@ -20,7 +20,7 @@ const App: React.FC = () => {
         setDetails={setDetails}
       />
 
-      <NotesBoard />
+      <NotesBoard details={details}/>
 
     </div>
   );

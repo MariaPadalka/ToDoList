@@ -2,7 +2,7 @@ import React from "react";
 import "./styles.css";
 import axios, { AxiosResponse } from "axios";
 import { urlCreate } from "../endpoints";
-import {NotesBoard} from "./NotesBoard/NotesBoard"
+import { message } from 'antd';
 
 
 interface Props {
@@ -17,6 +17,8 @@ const InputField: React.FC<Props> = ({
   setTodo,
   setDetails,
 }: Props) => {
+  const [messageApi, contextHolder] = message.useMessage();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -30,7 +32,10 @@ const InputField: React.FC<Props> = ({
       .post(urlCreate, requestBody)
       .then((response) => {
         // Handle the response
-        window.location.reload()
+        messageApi.success('Note created successfully');
+        // message.config({
+        //   topRight: 10;
+        // });
       })
       .catch((error) => {
         // Handle any errors
@@ -40,6 +45,7 @@ const InputField: React.FC<Props> = ({
 
   return (
     <div className="addNote">
+      {contextHolder}
       <form className="title_and_button" onSubmit={handleSubmit}>
         <input
           type="input"

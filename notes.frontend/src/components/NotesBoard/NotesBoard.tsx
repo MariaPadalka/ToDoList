@@ -5,9 +5,13 @@ import { urlDelete, urlGetAll, urlGet,urlUpdate } from "../../endpoints";
 import NoteWindow from "../NoteWindow/NoteWindow";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import { Button, Tooltip } from "antd";
-import ConfirmModal from "../ConfirmModal";
+import ConfirmModal from "../Modals/ConfirmModal";
 import EditModal from "../NoteWindow/NoteWindow";
+import { message } from 'antd';
 
+export interface NotesBoardProps {
+  details: string;
+}
 
 export interface Note {
   id: string;
@@ -22,19 +26,19 @@ interface NotesResponse {
   notes: Note[];
 }
 
-export const NotesBoard: React.FC = () => {
+export const NotesBoard: React.FC<NotesBoardProps> = ({details}) => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [noteWindowVisible, setNoteWindowVisible] = useState(false);
   const [deleteWindowVisible, setDeleteWindowVisible] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | undefined>(undefined);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [deleteCount, setDeleteCount] = useState(0);
-
+  const [messageApi, contextHolder] = message.useMessage();
 
 
   useEffect(() => {
     getAllNotes();
-  }, [deleteCount, notes]);
+  }, [deleteCount, notes, details]);
 
   const getAllNotes = () => {
     axios
@@ -104,6 +108,9 @@ export const NotesBoard: React.FC = () => {
           const updatedNotes = [...notes];
           const noteIndex = updatedNotes.findIndex((note) => note.id === noteId);
           if (noteIndex !== -1) {
+            if(updatedNotes[noteIndex].status != status){
+              messageApi.success('Status changed successfully');
+            }
             updatedNotes[noteIndex].status = status;
             setNotes(updatedNotes);
           }
@@ -144,6 +151,7 @@ export const NotesBoard: React.FC = () => {
         setDeleteCount((prevCount) => prevCount + 1); // Increment deleteCount
         setDeleteWindowVisible(false);
         setSelectedNoteId(null);
+        messageApi.success('Note deleted successfully');
       })
       .catch((error) => {
         console.error(error);
@@ -156,6 +164,7 @@ export const NotesBoard: React.FC = () => {
         setNoteWindowVisible(false);
         setSelectedNote(undefined);
         getAllNotes();
+        messageApi.success('Note edited successfully');
       })
       .catch((error) => {
         console.error(error);
@@ -191,7 +200,7 @@ export const NotesBoard: React.FC = () => {
           {renderNotes(doneNotes)}
         </div>
       </div>
-
+      {contextHolder}
       <EditModal
         visible={noteWindowVisible}
         onCancel={handleCloseNoteWindow}
